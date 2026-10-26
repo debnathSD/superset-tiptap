@@ -23,7 +23,7 @@
     "jsonwebtoken": "^9.0.3",
     "lodash": "^4.17.23",
     "winston": "^3.19.0",
-    "ws": "^8.19.0"
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.1",
@@ -32,7 +32,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.24",
     "@types/node": "^25.3.3",
-    "@types/ws": "^8.18.1",
+    "@types/ws": "^8.18.2",
     "@typescript-eslint/eslint-plugin": "^8.55.0",
     "@typescript-eslint/parser": "^8.55.0",
     "eslint": "^10.0.2",
