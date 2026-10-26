@@ -34,7 +34,7 @@ function useFitScale(frameRef: RefObject<HTMLElement | null>, width: number) {
     const update = () => {
       const style = getComputedStyle(canvas);
       const available = canvas.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-      setScale(Math.min(1, Math.max(0.3, available / width)));
+      setScale(Math.min(1, Math.max(0.2, available / width)));
     };
     const observer = new ResizeObserver(update);
     observer.observe(canvas);

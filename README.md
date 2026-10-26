@@ -17,6 +17,8 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+> **This fork adds Pages**: SharePoint-style pages built on the Tiptap editor, next to Dashboards and Charts, with every Superset chart, portrait pages, 16:9 slides, custom headers and footers, and PDF, Word and PowerPoint downloads. See [PAGES.md](PAGES.md).
+
 # Superset
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/license/apache-2-0)

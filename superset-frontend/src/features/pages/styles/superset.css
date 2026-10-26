@@ -157,6 +157,10 @@
 .pg-root .pg-sheet[data-scaled] {
   transform-origin: top left;
 }
+.pg-root .pg-sheet[data-paginate] {
+  /* Content lays out at the paper or slide width, not the window's: columns never stack inside a sheet. */
+  container-type: inline-size;
+}
 .pg-root .pg-sheet {
   position: relative;
   margin: 0 auto;
