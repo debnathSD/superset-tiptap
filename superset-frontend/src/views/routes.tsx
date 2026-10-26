@@ -69,6 +69,14 @@ const ThemeList = lazy(
   () => import(/* webpackChunkName: "ThemeList" */ 'src/pages/ThemeList'),
 );
 
+const PageList = lazy(
+  () => import(/* webpackChunkName: "PageList" */ 'src/pages/PageList'),
+);
+
+const PageEditor = lazy(
+  () => import(/* webpackChunkName: "PageEditor" */ 'src/pages/PageEditor'),
+);
+
 const DashboardList = lazy(
   () =>
     import(/* webpackChunkName: "DashboardList" */ 'src/pages/DashboardList'),
@@ -230,6 +238,14 @@ export const routes: Routes = [
   {
     path: '/superset/dashboard/:idOrSlug/',
     Component: Dashboard,
+  },
+  {
+    path: '/page/list/',
+    Component: PageList,
+  },
+  {
+    path: '/page/:pageId/',
+    Component: PageEditor,
   },
   {
     path: '/chart/add',

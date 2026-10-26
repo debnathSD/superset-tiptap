@@ -159,6 +159,7 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
         from superset.charts.api import ChartRestApi
         from superset.charts.data.api import ChartDataRestApi
         from superset.css_templates.api import CssTemplateRestApi
+        from superset.pages.api import PageRestApi
         from superset.dashboards.api import DashboardRestApi
         from superset.dashboards.filter_state.api import DashboardFilterStateRestApi
         from superset.dashboards.permalink.api import DashboardPermalinkRestApi
@@ -195,6 +196,7 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
         from superset.views.chart.views import SliceModelView
         from superset.views.core import Superset
         from superset.views.css_templates import CssTemplateModelView
+        from superset.views.pages import PageView
         from superset.views.dashboard.views import (
             Dashboard,
             DashboardModelView,
@@ -253,6 +255,7 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
         appbuilder.add_api(DashboardFilterStateRestApi)
         appbuilder.add_api(DashboardPermalinkRestApi)
         appbuilder.add_api(DashboardRestApi)
+        appbuilder.add_api(PageRestApi)
         appbuilder.add_api(DatabaseRestApi)
         appbuilder.add_api(DatasetRestApi)
         appbuilder.add_api(DatasetColumnsRestApi)
@@ -310,6 +313,14 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
             "Dashboards",
             label=_("Dashboards"),
             icon="fa-dashboard",
+            category="",
+            category_icon="",
+        )
+        appbuilder.add_view(
+            PageView,
+            "Pages",
+            label=_("Pages"),
+            icon="fa-file-text-o",
             category="",
             category_icon="",
         )

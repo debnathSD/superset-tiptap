@@ -101,6 +101,11 @@ if (!isDevMode) {
 }
 
 const plugins = [
+  // pptxgenjs (Pages exports) lazily imports node:fs / node:https for its Node
+  // build; strip the scheme so the `fallback` entries below stub them out.
+  new webpack.NormalModuleReplacementPlugin(/^node:(fs|https)$/, resource => {
+    resource.request = resource.request.replace(/^node:/, '');
+  }),
   new webpack.ProvidePlugin({
     process: 'process/browser.js',
     ...(isDevMode ? { Buffer: ['buffer', 'Buffer'] } : {}), // Fix legacy-plugin-chart-paired-t-test broken Story
@@ -466,6 +471,7 @@ const config = {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.yml'],
     fallback: {
       fs: false,
+      https: false,
       vm: require.resolve('vm-browserify'),
       path: false,
       stream: require.resolve('stream-browserify'),

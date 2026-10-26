@@ -1,0 +1,136 @@
+/* Generated from the Tiptap Pages stylesheets and scoped under .pg-root so nothing leaks into Superset. */
+.pg-root {
+  color-scheme: light;
+  --font-sans: inherit; --font-sans-fallback: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+
+  --app-bg: #f3f2f1;
+  --chrome-bg: #ffffff;
+  --chrome-border: #e1dfdd;
+  --canvas-bg: #ffffff;
+  --page-bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f6f5f4;
+  --surface-3: #ebe9e7;
+  --border: #e1dfdd;
+  --border-strong: #c8c6c4;
+  --text: #201f1e;
+  --text-muted: #605e5c;
+  --text-subtle: #8a8886;
+  --link: #0f6cbd;
+
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --accent-text: #0f766e;
+  --on-accent: #ffffff;
+
+  --tint: 10%;
+  --tone-good: #15803d;
+  --tone-info: #1d4ed8;
+  --tone-warn: #b45309;
+  --tone-bad: #b91c1c;
+  --tone-neutral: #64748b;
+
+  --radius-sm: 5px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05), 0 1px 3px rgb(0 0 0 / 0.07);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.04), 0 6px 16px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 4px 10px rgb(0 0 0 / 0.06), 0 16px 40px rgb(0 0 0 / 0.16);
+
+  --palette-neutral: #64748b;
+  --palette-teal: #0f766e;
+  --palette-blue: #1d4ed8;
+  --palette-indigo: #4338ca;
+  --palette-purple: #7e22ce;
+  --palette-pink: #be185d;
+  --palette-red: #b91c1c;
+  --palette-orange: #c2410c;
+  --palette-amber: #a16207;
+  --palette-green: #15803d;
+}
+.pg-root[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0b0d0f;
+  --chrome-bg: #14171a;
+  --chrome-border: #262a2f;
+  --canvas-bg: #111417;
+  --page-bg: #111417;
+  --surface: #181c20;
+  --surface-2: #1e2328;
+  --surface-3: #2a3036;
+  --border: #2b3137;
+  --border-strong: #3e464e;
+  --text: #e7e9eb;
+  --text-muted: #a3aab1;
+  --text-subtle: #737c85;
+  --link: #6cb8f6;
+
+  --accent: #14b8a6;
+  --accent-strong: #0d9488;
+  --accent-text: #5eead4;
+  --on-accent: #04201d;
+
+  --tint: 20%;
+  --tone-good: #4ade80;
+  --tone-info: #60a5fa;
+  --tone-warn: #fbbf24;
+  --tone-bad: #f87171;
+  --tone-neutral: #94a3b8;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 6px rgb(0 0 0 / 0.35), 0 8px 20px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 8px 20px rgb(0 0 0 / 0.45), 0 20px 48px rgb(0 0 0 / 0.4);
+
+  --palette-neutral: #64748b;
+  --palette-teal: #0f766e;
+  --palette-blue: #1d4ed8;
+  --palette-indigo: #4338ca;
+  --palette-purple: #7e22ce;
+  --palette-pink: #be185d;
+  --palette-red: #b91c1c;
+  --palette-orange: #c2410c;
+  --palette-amber: #a16207;
+  --palette-green: #15803d;
+}
+.pg-root [data-color="neutral"] { --c: var(--palette-neutral); --c-on: #fff; }
+.pg-root [data-color="teal"] { --c: var(--palette-teal); --c-on: #fff; }
+.pg-root [data-color="blue"] { --c: var(--palette-blue); --c-on: #fff; }
+.pg-root [data-color="indigo"] { --c: var(--palette-indigo); --c-on: #fff; }
+.pg-root [data-color="purple"] { --c: var(--palette-purple); --c-on: #fff; }
+.pg-root [data-color="pink"] { --c: var(--palette-pink); --c-on: #fff; }
+.pg-root [data-color="red"] { --c: var(--palette-red); --c-on: #fff; }
+.pg-root [data-color="orange"] { --c: var(--palette-orange); --c-on: #fff; }
+.pg-root [data-color="amber"] { --c: var(--palette-amber); --c-on: #fff; }
+.pg-root [data-color="green"] { --c: var(--palette-green); --c-on: #fff; }
+.pg-root [data-bg="neutral"] { --c-bg: var(--palette-neutral); --c-bg-on: #fff; }
+.pg-root [data-bg="teal"] { --c-bg: var(--palette-teal); --c-bg-on: #fff; }
+.pg-root [data-bg="blue"] { --c-bg: var(--palette-blue); --c-bg-on: #fff; }
+.pg-root [data-bg="indigo"] { --c-bg: var(--palette-indigo); --c-bg-on: #fff; }
+.pg-root [data-bg="purple"] { --c-bg: var(--palette-purple); --c-bg-on: #fff; }
+.pg-root [data-bg="pink"] { --c-bg: var(--palette-pink); --c-bg-on: #fff; }
+.pg-root [data-bg="red"] { --c-bg: var(--palette-red); --c-bg-on: #fff; }
+.pg-root [data-bg="orange"] { --c-bg: var(--palette-orange); --c-bg-on: #fff; }
+.pg-root [data-bg="amber"] { --c-bg: var(--palette-amber); --c-bg-on: #fff; }
+.pg-root [data-bg="green"] { --c-bg: var(--palette-green); --c-bg-on: #fff; }
+.pg-root [data-accent="neutral"] { --c-accent: var(--palette-neutral); --c-accent-on: #fff; }
+.pg-root [data-accent="teal"] { --c-accent: var(--palette-teal); --c-accent-on: #fff; }
+.pg-root [data-accent="blue"] { --c-accent: var(--palette-blue); --c-accent-on: #fff; }
+.pg-root [data-accent="indigo"] { --c-accent: var(--palette-indigo); --c-accent-on: #fff; }
+.pg-root [data-accent="purple"] { --c-accent: var(--palette-purple); --c-accent-on: #fff; }
+.pg-root [data-accent="pink"] { --c-accent: var(--palette-pink); --c-accent-on: #fff; }
+.pg-root [data-accent="red"] { --c-accent: var(--palette-red); --c-accent-on: #fff; }
+.pg-root [data-accent="orange"] { --c-accent: var(--palette-orange); --c-accent-on: #fff; }
+.pg-root [data-accent="amber"] { --c-accent: var(--palette-amber); --c-accent-on: #fff; }
+.pg-root [data-accent="green"] { --c-accent: var(--palette-green); --c-accent-on: #fff; }
+.pg-root [data-header="neutral"] { --c-header: var(--palette-neutral); --c-header-on: #fff; }
+.pg-root [data-header="teal"] { --c-header: var(--palette-teal); --c-header-on: #fff; }
+.pg-root [data-header="blue"] { --c-header: var(--palette-blue); --c-header-on: #fff; }
+.pg-root [data-header="indigo"] { --c-header: var(--palette-indigo); --c-header-on: #fff; }
+.pg-root [data-header="purple"] { --c-header: var(--palette-purple); --c-header-on: #fff; }
+.pg-root [data-header="pink"] { --c-header: var(--palette-pink); --c-header-on: #fff; }
+.pg-root [data-header="red"] { --c-header: var(--palette-red); --c-header-on: #fff; }
+.pg-root [data-header="orange"] { --c-header: var(--palette-orange); --c-header-on: #fff; }
+.pg-root [data-header="amber"] { --c-header: var(--palette-amber); --c-header-on: #fff; }
+.pg-root [data-header="green"] { --c-header: var(--palette-green); --c-header-on: #fff; }
