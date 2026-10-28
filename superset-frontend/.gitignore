@@ -10,5 +10,7 @@ src/temp
 .swc/
 **/esm/*
 **/lib/*
+# Pages keeps editor helpers in a lib/ folder: source, not a build output.
+!src/features/pages/editor/lib/*
 **/storybook-static/*
 migration-storybook.log
