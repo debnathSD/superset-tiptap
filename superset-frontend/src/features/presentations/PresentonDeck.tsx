@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { t } from '@apache-superset/core/translation';
 import { styled } from '@apache-superset/core/theme';
@@ -39,16 +39,16 @@ const Root = styled.div`
     padding: ${({ theme }) => theme.sizeUnit * 2}px ${({ theme }) => theme.sizeUnit * 4}px;
     border-bottom: 1px solid ${({ theme }) => theme.colorBorderSecondary};
     background: ${({ theme }) => theme.colorBgContainer};
-    flex-wrap: wrap;
   }
   .deck-header__back {
     display: inline-flex;
     align-items: center;
     gap: ${({ theme }) => theme.sizeUnit}px;
     color: ${({ theme }) => theme.colorTextSecondary};
+    white-space: nowrap;
   }
   .deck-header__title {
-    flex: 1 1 240px;
+    flex: 1 1 160px;
     min-width: 0;
     padding: ${({ theme }) => theme.sizeUnit}px ${({ theme }) => theme.sizeUnit * 2}px;
     border: 1px solid transparent;
@@ -70,31 +70,40 @@ const Root = styled.div`
     gap: ${({ theme }) => theme.sizeUnit}px;
     color: ${({ theme }) => theme.colorTextSecondary};
     font-size: ${({ theme }) => theme.fontSizeSM}px;
+    white-space: nowrap;
   }
   .deck-header__actions {
     display: flex;
+    flex: none;
     gap: ${({ theme }) => theme.sizeUnit * 2}px;
-    flex-wrap: wrap;
   }
   .deck-header__actions svg {
-    margin-right: ${({ theme }) => theme.sizeUnit}px;
     vertical-align: -2px;
+  }
+  .deck-header__label {
+    margin-left: ${({ theme }) => theme.sizeUnit}px;
+  }
+  /* Keep one header row on narrower windows: icons only, names in tooltips. */
+  @media (max-width: 1240px) {
+    .deck-header__label,
+    .deck-header__badge-text {
+      display: none;
+    }
   }
   .deck-frame {
     position: relative;
     flex: 1;
     min-height: 0;
-    padding: ${({ theme }) => theme.sizeUnit * 3}px;
+    overflow: hidden;
   }
+  /* Edge to edge: Presenton's editor brings its own chrome. */
   .deck-frame iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: block;
-    width: 100%;
-    height: 100%;
-    min-height: 420px;
     border: 0;
-    border-radius: ${({ theme }) => theme.borderRadiusLG}px;
     background: ${({ theme }) => theme.colorBgContainer};
-    box-shadow: ${({ theme }) => theme.boxShadowTertiary};
   }
   .deck-message {
     display: grid;
@@ -104,12 +113,29 @@ const Root = styled.div`
     text-align: center;
     color: ${({ theme }) => theme.colorTextSecondary};
   }
-  .deck-footer {
-    padding: 0 ${({ theme }) => theme.sizeUnit * 4}px ${({ theme }) => theme.sizeUnit * 2}px;
-    color: ${({ theme }) => theme.colorTextDescription};
-    font-size: ${({ theme }) => theme.fontSizeSM}px;
-  }
 `;
+
+/**
+ * Presenton's editor (slide list, canvas and AI assistant) is laid out for a
+ * desktop window. A smaller area gets the same layout, zoomed out to fit,
+ * rather than a cramped assistant or Presenton's mobile layout.
+ */
+const DESKTOP = { width: 1280, height: 720 };
+
+function useDesktopCanvas(ref: RefObject<HTMLElement>) {
+  const [box, setBox] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const measure = () => setBox({ width: el.clientWidth, height: el.clientHeight });
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    measure();
+    return () => observer.disconnect();
+  }, [ref]);
+  const scale = box.width && box.height ? Math.min(1, box.width / DESKTOP.width, box.height / DESKTOP.height) : 1;
+  return { scale, width: box.width / scale, height: box.height / scale };
+}
 
 type Props = {
   item: PresentationRecord;
@@ -125,6 +151,8 @@ export function PresentonDeck({ item, canEdit, addDangerToast }: Props) {
   const source = parseSource(item);
   const rootRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const canvas = useDesktopCanvas(canvasRef);
   const [top, setTop] = useState(0);
   const [embed, setEmbed] = useState<PresentonEmbed | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -191,8 +219,14 @@ export function PresentonDeck({ item, canEdit, addDangerToast }: Props) {
           <span className="deck-header__title">{title}</span>
         )}
         <Tag color={published ? 'green' : undefined}>{published ? t('Published') : t('Draft')}</Tag>
-        <span className="deck-header__badge">
-          <Sparkles size={14} /> {t('Designed with Presenton')}
+        <span
+          className="deck-header__badge"
+          title={[
+            embed?.can_edit ? t('Edits you make here are saved in Presenton.') : t('View only. Owners can edit this deck.'),
+            source.chart_ids?.length ? t('Built from %s Superset charts.', source.chart_ids.length) : '',
+          ].join(' ')}
+        >
+          <Sparkles size={14} /> <span className="deck-header__badge-text">{t('Designed with Presenton')}</span>
         </span>
         <div className="deck-header__actions">
           {canEdit && (
@@ -208,26 +242,31 @@ export function PresentonDeck({ item, canEdit, addDangerToast }: Props) {
             </Button>
           )}
           {source.file_url && (
-            <Button buttonStyle="secondary" buttonSize="small" href={source.file_url} target="_blank" rel="noopener noreferrer">
-              <Download size={14} /> {t('Download .pptx')}
+            <Button buttonStyle="secondary" buttonSize="small" href={source.file_url} target="_blank" rel="noopener noreferrer" title={t('Download .pptx')}>
+              <Download size={14} />
+              <span className="deck-header__label">{t('Download .pptx')}</span>
             </Button>
           )}
           {embed && (
-            <Button buttonStyle="secondary" buttonSize="small" href={embed.url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink size={14} /> {t('Open in new tab')}
+            <Button buttonStyle="secondary" buttonSize="small" href={embed.url} target="_blank" rel="noopener noreferrer" title={t('Open in new tab')}>
+              <ExternalLink size={14} />
+              <span className="deck-header__label">{t('Open in new tab')}</span>
             </Button>
           )}
-          <Button buttonStyle="primary" buttonSize="small" disabled={!embed} onClick={() => frameRef.current?.requestFullscreen?.().catch(() => undefined)}>
-            <Maximize2 size={14} /> {t('Present')}
+          <Button buttonStyle="primary" buttonSize="small" title={t('Present full screen')} disabled={!embed} onClick={() => frameRef.current?.requestFullscreen?.().catch(() => undefined)}>
+            <Maximize2 size={14} />
+            <span className="deck-header__label">{t('Present')}</span>
           </Button>
         </div>
       </header>
-      <div className="deck-frame">
+      <div className="deck-frame" ref={canvasRef}>
         {embed ? (
           <iframe
             ref={frameRef}
             key={embed.url}
             src={embed.url}
+            // zoom (not a transform) re-lays the page out at the smaller size, so text stays sharp.
+            style={{ width: canvas.width, height: canvas.height, zoom: canvas.scale < 1 ? canvas.scale : undefined }}
             title={t('Presenton presentation: %s', title)}
             allow="fullscreen; clipboard-write"
             allowFullScreen
@@ -245,10 +284,6 @@ export function PresentonDeck({ item, canEdit, addDangerToast }: Props) {
         ) : (
           <Loading />
         )}
-      </div>
-      <div className="deck-footer">
-        {embed?.can_edit ? t('Edits you make here are saved in Presenton.') : t('View only. Owners can edit this deck.')}
-        {source.chart_ids?.length ? ` ${t('Built from %s Superset charts.', source.chart_ids.length)}` : ''}
       </div>
     </Root>
   );
