@@ -21,7 +21,7 @@ import { Link, useHistory } from 'react-router-dom';
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { t } from '@apache-superset/core/translation';
 import { isThemeDark, useTheme } from '@apache-superset/core/theme';
-import { ArrowLeft, BarChart3, Check, Copy, Download, Eye, FileText, ListTree, LoaderCircle, Lock, PanelRight, PanelsTopBottom, Pencil, Presentation, RectangleHorizontal, RectangleVertical, ScrollText, Settings2, TriangleAlert, Upload } from 'lucide-react';
+import { ArrowLeft, BarChart3, Check, Copy, Download, Eye, FileText, ListTree, LoaderCircle, Lock, PanelRight, PanelsTopBottom, Pencil, Play, Presentation, RectangleHorizontal, RectangleVertical, ScrollText, Settings2, TriangleAlert, Upload } from 'lucide-react';
 import { BlockHandle } from './editor/BlockHandle';
 import { TableControls } from './editor/TableControls';
 import { blankDoc } from './editor/content/builders';
@@ -35,6 +35,7 @@ import { Field, Popover, Segmented } from './editor/ui/controls';
 import { ChartPicker } from './chart/ChartPicker';
 import { pageBreaks, waitForPagination } from './pagination/pagination';
 import { PageSheet } from './pagination/PageSheet';
+import { SlideShow } from './pagination/SlideShow';
 import { HeaderFooterPanel, type HeaderFooterFocus } from './pagination/HeaderFooterPanel';
 import { formatDate, type HeaderFooterZone, type PageVars } from './pagination/settings';
 import { copyPage, isPaged, parseContent, parseSettings, updatePage, type LayoutMode, type PageRecord, type PageSettings } from './api';
@@ -44,8 +45,43 @@ import './styles/content.css';
 import './styles/app.css';
 import './styles/superset.css';
 
+/** What differs between the documents that share this editor: pages and presentations. */
+export type EditorKind = {
+  listPath: string;
+  listLabel: string;
+  itemPath: (id: number) => string;
+  nameLabel: string;
+  untitled: string;
+  save: (id: number, body: Parameters<typeof updatePage>[1]) => Promise<void>;
+  copy: (id: number) => Promise<number>;
+  copied: (title: string) => string;
+  saveError: string;
+  copyError: string;
+  /** A fixed layout hides the layout switch (presentations are always slides). */
+  layout?: LayoutMode;
+  /** Offer a fullscreen slideshow. */
+  present?: boolean;
+};
+
+export const PAGE_KIND: EditorKind = {
+  listPath: '/page/list/',
+  listLabel: t('Pages'),
+  itemPath: id => `/page/${id}/`,
+  nameLabel: t('Page name'),
+  untitled: t('Untitled page'),
+  save: updatePage,
+  copy: id => copyPage(id),
+  copied: title => t('Copied "%s" to your pages', title),
+  saveError: t('Could not save the page.'),
+  copyError: t('Could not copy the page.'),
+};
+
+/** The record the editor works on; presentations have no templates. */
+export type EditorRecord = Omit<PageRecord, 'is_template'> & { is_template?: boolean };
+
 type Props = {
-  page: PageRecord;
+  page: EditorRecord;
+  kind?: EditorKind;
   canEdit: boolean;
   addSuccessToast: (msg: string) => void;
   addDangerToast: (msg: string) => void;
@@ -64,14 +100,16 @@ function useDebounced<T extends unknown[]>(fn: (...args: T) => void, ms: number)
   return call;
 }
 
-function PageSetup({ settings, onChange, onHeaderFooter }: { settings: PageSettings; onChange: (s: PageSettings) => void; onHeaderFooter: () => void }) {
+function PageSetup({ settings, paper, onChange, onHeaderFooter }: { settings: PageSettings; paper: boolean; onChange: (s: PageSettings) => void; onHeaderFooter: () => void }) {
   const set = (patch: Partial<PageSettings>) => onChange({ ...settings, ...patch });
   return (
     <div className="popover__body pg-page-setup">
       <div className="popover__title">{t('Page setup')}</div>
-      <Field label={t('Portrait paper')} hint={t('Landscape pages are always 16:9 PowerPoint slides.')}>
-        <Segmented value={settings.size} onChange={size => set({ size })} options={['A4', 'Letter', 'Legal'].map(v => ({ value: v as PageSettings['size'], label: v }))} />
-      </Field>
+      {paper && (
+        <Field label={t('Portrait paper')} hint={t('Landscape pages are always 16:9 PowerPoint slides.')}>
+          <Segmented value={settings.size} onChange={size => set({ size })} options={['A4', 'Letter', 'Legal'].map(v => ({ value: v as PageSettings['size'], label: v }))} />
+        </Field>
+      )}
       <Field label={t('Margins')}>
         <Segmented value={settings.margins} onChange={margins => set({ margins })} options={[{ value: 'narrow', label: t('Narrow') }, { value: 'normal', label: t('Normal') }, { value: 'wide', label: t('Wide') }]} />
       </Field>
@@ -100,7 +138,7 @@ function LayoutSwitch({ value, onChange }: { value: LayoutMode; onChange: (layou
   );
 }
 
-export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToast }: Props) {
+export function PageEditorScreen({ page, kind = PAGE_KIND, canEdit, addSuccessToast, addDangerToast }: Props) {
   const history = useHistory();
   const theme = useTheme();
   const dark = isThemeDark(theme);
@@ -108,7 +146,10 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
   const canvasRef = useRef<HTMLElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(0);
-  const [settings, setSettings] = useState(() => parseSettings(page));
+  const [settings, setSettings] = useState(() => {
+    const stored = parseSettings(page);
+    return kind.layout ? { ...stored, layout: kind.layout } : stored;
+  });
   const [mode, setMode] = useState<'edit' | 'view'>(canEdit ? 'edit' : 'view');
   const [left, setLeft] = useState<'outline' | 'charts' | null>(() => (window.innerWidth > 1200 ? (canEdit ? 'charts' : 'outline') : null));
   const [right, setRight] = useState<'properties' | 'headerFooter' | null>(() => (window.innerWidth > 1200 ? 'properties' : null));
@@ -117,6 +158,7 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
   const [published, setPublished] = useState(page.published);
   const [status, setStatus] = useState<SaveStatus>(canEdit ? 'saved' : 'readonly');
   const [exporting, setExporting] = useState<string | null>(null);
+  const [presenting, setPresenting] = useState(false);
   /** While exporting, render in the layout the file needs (Word = portrait, PowerPoint = landscape). */
   const [renderLayout, setRenderLayout] = useState<LayoutMode | null>(null);
   const effective = useMemo(() => (renderLayout ? { ...settings, layout: renderLayout } : settings), [settings, renderLayout]);
@@ -148,21 +190,21 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
     (body: Parameters<typeof updatePage>[1]) => {
       if (!canEdit) return;
       setStatus('saving');
-      updatePage(page.id, body).then(
+      kind.save(page.id, body).then(
         () => {
           pending.current = false;
           setStatus('saved');
         },
         () => {
           setStatus('error');
-          addDangerToast(t('Could not save the page.'));
+          addDangerToast(kind.saveError);
         },
       );
     },
-    [addDangerToast, canEdit, page.id],
+    [addDangerToast, canEdit, kind, page.id],
   );
   const saveContent = useDebounced(() => save({ content: JSON.stringify(editor.getJSON()) }), 900);
-  const saveTitle = useDebounced((value: string) => save({ title: value.trim() || t('Untitled page') }), 600);
+  const saveTitle = useDebounced((value: string) => save({ title: value.trim() || kind.untitled }), 600);
   const saveSettings = useDebounced((value: PageSettings) => save({ page_settings: JSON.stringify(value) }), 400);
 
   useEffect(() => {
@@ -193,7 +235,7 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
 
   // Values for the {title}, {author} and {date} header/footer fields.
   const author = [page.created_by?.first_name, page.created_by?.last_name].filter(Boolean).join(' ') || [page.owners[0]?.first_name, page.owners[0]?.last_name].filter(Boolean).join(' ');
-  const vars = useMemo<PageVars>(() => ({ title: title.trim() || t('Untitled page'), author, date: formatDate(new Date()) }), [title, author]);
+  const vars = useMemo<PageVars>(() => ({ title: title.trim() || kind.untitled, author, date: formatDate(new Date()) }), [title, author]);
   useEffect(() => {
     editor.commands.setPageVars(vars);
   }, [editor, vars]);
@@ -238,13 +280,27 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
   const totalPages = useEditorState({ editor, selector: ({ editor: e }) => pageBreaks(e.state)?.total ?? 1 });
 
   const clone = () =>
-    copyPage(page.id).then(
+    kind.copy(page.id).then(
       id => {
-        addSuccessToast(t('Copied "%s" to your pages', page.title));
-        history.push(`/page/${id}/`);
+        addSuccessToast(kind.copied(page.title));
+        history.push(kind.itemPath(id));
       },
-      () => addDangerToast(t('Could not copy the page.')),
+      () => addDangerToast(kind.copyError),
     );
+
+  // ── Slideshow ─────────────────────────────────────────────────────────────
+  const editingBeforeShow = useRef(false);
+  const startShow = () => {
+    editingBeforeShow.current = editing;
+    if (editing) setMode('view');
+    setPresenting(true);
+    rootRef.current?.requestFullscreen?.().catch(() => undefined); // without fullscreen the show still covers the window
+  };
+  const endShow = useCallback(() => {
+    setPresenting(false);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
+    if (editingBeforeShow.current) setMode('edit');
+  }, []);
 
   const runExport = async (kind: ExportKind) => {
     if (!sheetRef.current) return;
@@ -273,19 +329,19 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
 
   return (
     <div className="pg-root pg-editor" data-theme={dark ? 'dark' : 'light'} ref={rootRef} style={{ height: `calc(100vh - ${top}px)` }}>
-      <div className="app" data-mode={editing ? 'edit' : 'view'} data-exporting={exporting || undefined} data-hf-editing={(editing && right === 'headerFooter' && !exporting) || undefined}>
+      <div className="app" data-mode={editing ? 'edit' : 'view'} data-presenting={presenting || undefined} data-exporting={exporting || undefined} data-hf-editing={(editing && right === 'headerFooter' && !exporting) || undefined}>
         <header className="pg-header">
           <div className="pg-header__left">
-            <Link to="/page/list/" className="pg-header__back" title={t('All pages')}>
-              <ArrowLeft size={16} /> {t('Pages')}
+            <Link to={kind.listPath} className="pg-header__back" title={kind.listLabel}>
+              <ArrowLeft size={16} /> {kind.listLabel}
             </Link>
             <span className="pg-header__sep" aria-hidden="true" />
             {canEdit ? (
               <input
                 className="pg-header__title"
                 value={title}
-                aria-label={t('Page name')}
-                placeholder={t('Untitled page')}
+                aria-label={kind.nameLabel}
+                placeholder={kind.untitled}
                 onChange={e => {
                   setTitle(e.target.value);
                   pending.current = true;
@@ -327,11 +383,12 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
                 <PanelsTopBottom size={18} />
               </button>
             )}
-            <LayoutSwitch value={effective.layout} onChange={changeLayout} />
+            {!kind.layout && <LayoutSwitch value={effective.layout} onChange={changeLayout} />}
             <Popover title={t('Page setup')} label={<><Settings2 size={16} /> {t('Page setup')}</>} align="end" disabled={!canEdit}>
               {close => (
                 <PageSetup
                   settings={settings}
+                  paper={!kind.layout || kind.layout === 'portrait'}
                   onChange={updateSettings}
                   onHeaderFooter={() => {
                     close();
@@ -355,6 +412,11 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
                 </div>
               )}
             </Popover>
+            {kind.present && (
+              <button type="button" className="btn" title={t('Present full screen (Esc to leave)')} onClick={startShow} disabled={!!exporting}>
+                <Play size={15} /> {t('Present')}
+              </button>
+            )}
             {canEdit && !page.is_template && (
               <button
                 type="button"
@@ -385,11 +447,11 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
         </header>
         {editing && <Toolbar editor={editor} />}
         <div className="app__body">
-          {left === 'outline' && <OutlinePanel editor={editor} stats={stats} canvasRef={canvasRef} onClose={() => setLeft(null)} />}
-          {left === 'charts' && <ChartPicker editor={editor} editable={editing} onClose={() => setLeft(null)} />}
+          {!presenting && left === 'outline' && <OutlinePanel editor={editor} stats={stats} canvasRef={canvasRef} onClose={() => setLeft(null)} />}
+          {!presenting && left === 'charts' && <ChartPicker editor={editor} editable={editing} onClose={() => setLeft(null)} />}
           <main className="pg-canvas" ref={canvasRef} data-paged={isPaged(effective) || undefined}>
             <EditableContext.Provider value={editing}>
-              <PageSheet settings={effective} sheetRef={sheetRef} fit={!exporting} onEditBand={canEdit ? openHeaderFooter : undefined}>
+              <PageSheet settings={effective} sheetRef={sheetRef} fit={!exporting && !presenting} onEditBand={canEdit ? openHeaderFooter : undefined}>
                 <div className="pg-page" data-mode={editing ? 'edit' : 'view'}>
                   <EditorContent editor={editor} />
                   {editing && <BlockHandle editor={editor} />}
@@ -398,9 +460,10 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
               </PageSheet>
             </EditableContext.Provider>
           </main>
-          {editing && right === 'properties' && <PropertyPane editor={editor} stats={stats} onClose={() => setRight(null)} />}
-          {editing && right === 'headerFooter' && <HeaderFooterPanel settings={settings} vars={vars} total={totalPages} focus={hfFocus} onChange={updateSettings} onClose={() => setRight(null)} />}
+          {editing && !presenting && right === 'properties' && <PropertyPane editor={editor} stats={stats} onClose={() => setRight(null)} />}
+          {editing && !presenting && right === 'headerFooter' && <HeaderFooterPanel settings={settings} vars={vars} total={totalPages} focus={hfFocus} onChange={updateSettings} onClose={() => setRight(null)} />}
         </div>
+        {presenting && <SlideShow settings={effective} canvasRef={canvasRef} sheetRef={sheetRef} onExit={endShow} />}
         <footer className="statusbar">
           <span className="statusbar__item">
             {effective.layout === 'portrait' && t('%s pages · %s portrait', totalPages, settings.size)}

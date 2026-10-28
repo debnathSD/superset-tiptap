@@ -227,6 +227,8 @@ development = [
     "sqloxide",
     "statsd",
 ]
+# Claude writes Presentations decks (see PRESENTATIONS.md).
+presentations-ai = ["anthropic>=2.3.0, <3"]
 
 [project.urls]
 homepage = "https://superset.apache.org/"

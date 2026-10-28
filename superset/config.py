@@ -2131,6 +2131,8 @@ TALISMAN_CONFIG = {
             "https://cdn.document360.io",
         ],
         "worker-src": ["'self'", "blob:"],
+        # Presentations show Presenton decks in an iframe.
+        "frame-src": ["'self'", "https://presenton.ai"],
         "connect-src": [
             "'self'",
             "https://api.mapbox.com",
@@ -2171,6 +2173,8 @@ TALISMAN_DEV_CONFIG = {
             "https://cdn.document360.io",
         ],
         "worker-src": ["'self'", "blob:"],
+        # Presentations show Presenton decks in an iframe.
+        "frame-src": ["'self'", "https://presenton.ai"],
         "connect-src": [
             "'self'",
             "https://api.mapbox.com",
@@ -2542,6 +2546,29 @@ TASKS_ABORT_CHANNEL_PREFIX = "gtf:abort:"
 # -------------------------------------------------------------------
 # Don't add config values below this line since local configs won't be
 # able to override them.
+# ---------------------------------------------------
+# Presentations: AI deck generation with Claude
+# ---------------------------------------------------
+# Claude writes deck outlines from a brief and chart data. Leave the key unset
+# to use ANTHROPIC_API_KEY from the environment; with no key at all, the
+# Presentations section still builds plain drafts from the chart numbers.
+PRESENTATIONS_AI_API_KEY: str | None = None
+PRESENTATIONS_AI_MODEL = "claude-opus-5-5"
+# low | medium | high | xhigh | max: more effort is slower and costs more.
+PRESENTATIONS_AI_EFFORT = "medium"
+PRESENTATIONS_AI_TIMEOUT = 120  # seconds per Claude request
+PRESENTATIONS_AI_MAX_ROWS = 40  # rows per chart sent to Claude or Presenton
+
+# Presenton Cloud (https://presenton.ai) designs PowerPoint decks from the same
+# brief and chart data, shown inside Superset through short-lived embed links.
+# Leave the key unset to use PRESENTON_API_KEY from the environment.
+PRESENTON_API_KEY: str | None = None
+PRESENTON_API_URL = "https://api.presenton.ai/api/v3"
+# A Presenton standard template such as "neo-modern"; None lets Presenton choose.
+PRESENTON_TEMPLATE: str | None = None
+PRESENTON_TIMEOUT = 60  # seconds per Presenton API request
+PRESENTON_EMBED_HOURS = 2  # lifetime of an embed link (Presenton allows up to 72)
+
 if CONFIG_PATH_ENV_VAR in os.environ:
     # Explicitly import config module that is not necessarily in pythonpath; useful
     # for case where app is being executed via pex.

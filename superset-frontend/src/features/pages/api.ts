@@ -49,7 +49,7 @@ export type PageRecord = {
   owners: PageUser[];
 };
 
-export function parseContent(page: PageRecord): JSONContent | null {
+export function parseContent(page: Pick<PageRecord, 'content'>): JSONContent | null {
   try {
     return page.content ? (JSON.parse(page.content) as JSONContent) : null;
   } catch {
@@ -57,7 +57,7 @@ export function parseContent(page: PageRecord): JSONContent | null {
   }
 }
 
-export function parseSettings(page: PageRecord): PageSettings {
+export function parseSettings(page: Pick<PageRecord, 'page_settings'>): PageSettings {
   try {
     return normalizeSettings(page.page_settings ? JSON.parse(page.page_settings) : {});
   } catch {

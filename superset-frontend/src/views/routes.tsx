@@ -77,6 +77,20 @@ const PageEditor = lazy(
   () => import(/* webpackChunkName: "PageEditor" */ 'src/pages/PageEditor'),
 );
 
+const PresentationList = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "PresentationList" */ 'src/pages/PresentationList'
+    ),
+);
+
+const PresentationEditor = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "PresentationEditor" */ 'src/pages/PresentationEditor'
+    ),
+);
+
 const DashboardList = lazy(
   () =>
     import(/* webpackChunkName: "DashboardList" */ 'src/pages/DashboardList'),
@@ -246,6 +260,14 @@ export const routes: Routes = [
   {
     path: '/page/:pageId/',
     Component: PageEditor,
+  },
+  {
+    path: '/presentation/list/',
+    Component: PresentationList,
+  },
+  {
+    path: '/presentation/:presentationId/',
+    Component: PresentationEditor,
   },
   {
     path: '/chart/add',

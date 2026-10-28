@@ -5,6 +5,8 @@ This fork of [Apache Superset](https://github.com/apache/superset) 6.1.0 adds
 editor, as a third offering next to Dashboards and Charts. The standalone
 editor it grew from is [tiptap-debnathsd](https://github.com/debnathSD/tiptap-debnathsd).
 
+The AI slide builder that shares this editor is described in [PRESENTATIONS.md](PRESENTATIONS.md).
+
 ## What you get
 
 - **Pages list** (`/page/list/`): server-side paginated table with name, status, owners, author and dates. It has search, status, type and owner filters, bulk select and delete, a blank page, and a copy of the status-report template.
