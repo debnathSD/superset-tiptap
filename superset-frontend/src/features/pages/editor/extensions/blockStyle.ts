@@ -6,11 +6,29 @@ import { colorAttrs, normalizeColor } from '../lib/palette'
 /**
  * Colors on blocks: a paragraph, heading or quote can carry a block color with
  * a treatment — `tint` (soft background), `solid` (filled header bar) or
- * `bar` (accent rule on the left). Table cells get a background color, and
- * tables get a style preset with a header color.
+ * `bar` (accent rule on the left). Table cells get a background color with an
+ * opacity (it wins over the header color), and tables get a style preset with
+ * a header color and opacity. Strong fills switch to readable text.
  */
 
 export type BlockVariant = 'tint' | 'solid' | 'bar'
+
+/** From this opacity on, text on the fill switches to the color's readable text color. */
+export const STRONG_OPACITY = 60
+
+export function parseOpacity(value: unknown): number | null {
+  const n = Number(value)
+  return value !== null && value !== '' && Number.isFinite(n) && n >= 5 && n <= 100 ? Math.round(n) : null
+}
+
+/** Attributes for a fill opacity: a CSS variable, plus a flag when text must switch color. */
+function opacityAttrs(prefix: 'cell' | 'header', opacity: number) {
+  return {
+    [`data-${prefix}-opacity`]: opacity,
+    ...(opacity >= STRONG_OPACITY ? { [`data-${prefix}-strong`]: '' } : {}),
+    style: `--${prefix}-opacity: ${opacity}%`,
+  }
+}
 export const BLOCK_STYLE_TYPES = ['paragraph', 'heading', 'blockquote']
 
 declare module '@tiptap/core' {
@@ -62,6 +80,12 @@ export const BlockStyle = Extension.create({
               return { 'data-cell-color': attrs.cellColor, 'data-color': color['data-color'], style: color.style }
             },
           },
+          /** 5–100 %: how strongly the color fills the cell; null is the theme's soft tint. */
+          cellOpacity: {
+            default: null,
+            parseHTML: el => parseOpacity(el.getAttribute('data-cell-opacity')),
+            renderHTML: attrs => (attrs.cellColor && attrs.cellOpacity ? opacityAttrs('cell', attrs.cellOpacity) : {}),
+          },
         },
       },
     ]
@@ -108,6 +132,16 @@ class StyledTableView extends TableView {
     if (color['data-header']) this.dom.dataset.header = color['data-header']
     else delete this.dom.dataset.header
     this.dom.style.cssText = color.style ?? ''
+    const opacity = parseOpacity(node.attrs.headerOpacity)
+    if (opacity && node.attrs.headerColor) {
+      this.dom.dataset.headerOpacity = String(opacity)
+      this.dom.style.setProperty('--header-opacity', `${opacity}%`)
+      if (opacity >= STRONG_OPACITY) this.dom.dataset.headerStrong = ''
+      else delete this.dom.dataset.headerStrong
+    } else {
+      delete this.dom.dataset.headerOpacity
+      delete this.dom.dataset.headerStrong
+    }
   }
 }
 
@@ -131,6 +165,11 @@ export const StyledTable = Table.extend({
           const color = colorAttrs(attrs.headerColor, 'header')
           return attrs.headerColor ? { 'data-header-color': attrs.headerColor, 'data-header': color['data-header'], style: color.style } : {}
         },
+      },
+      headerOpacity: {
+        default: null,
+        parseHTML: el => parseOpacity(el.getAttribute('data-header-opacity')),
+        renderHTML: attrs => (attrs.headerColor && attrs.headerOpacity ? opacityAttrs('header', attrs.headerOpacity) : {}),
       },
     }
   },

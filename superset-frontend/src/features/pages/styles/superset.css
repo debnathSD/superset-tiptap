@@ -613,3 +613,136 @@
   justify-content: center;
   margin-top: 4px;
 }
+
+/* ── Tables: gridlines while editing, handles, hex colors (same as the standalone editor) ── */
+/* Faint gridlines while editing, so every column and row border can be found and dragged. */
+.pg-root .app[data-mode='edit'] .pg-content .tableWrapper:not([data-table-style='bordered']) :is(th, td) {
+  box-shadow: inset -1px -1px 0 var(--grid-guide);
+}
+.pg-root .app[data-mode='edit'] .pg-content .tableWrapper:not([data-table-style='bordered']) :is(th, td):first-child {
+  box-shadow:
+    inset -1px -1px 0 var(--grid-guide),
+    inset 1px 0 0 var(--grid-guide);
+}
+.pg-root .app[data-mode='edit'] .pg-content {
+  --grid-guide: color-mix(in srgb, var(--border-strong) 65%, transparent);
+}
+/* Table handles: add a row or column, drag row borders, resize from the corner */
+.pg-root .table-controls {
+  position: fixed;
+  z-index: 15;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pg-root .table-controls > * {
+  position: absolute;
+  pointer-events: auto;
+}
+.pg-root .table-controls__add {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px dashed var(--border-strong);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--page-bg) 70%, transparent);
+  color: var(--text-subtle);
+  opacity: 0.6;
+  transition:
+    opacity 0.12s,
+    background 0.12s,
+    border-color 0.12s;
+}
+.pg-root .table-controls__add--row {
+  height: 18px;
+}
+.pg-root .table-controls__add--column {
+  width: 18px;
+}
+.pg-root .table-controls__add:hover,
+.pg-root .table-controls__add:focus-visible {
+  opacity: 1;
+  border-style: solid;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--page-bg));
+  color: var(--accent-text);
+}
+.pg-root .table-controls__row-handle {
+  height: 8px;
+  cursor: row-resize;
+}
+.pg-root .table-controls__row-handle:hover::after {
+  content: '';
+  position: absolute;
+  inset: 3px 0 auto;
+  height: 2px;
+  background: var(--accent);
+}
+.pg-root .table-controls__corner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent);
+  border-radius: 3px;
+  background: var(--page-bg);
+  cursor: nwse-resize;
+  box-shadow: var(--shadow-sm);
+}
+.pg-root .table-controls__guide {
+  height: 2px;
+  background: var(--accent);
+  pointer-events: none;
+}
+.pg-root .table-controls__ghost {
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  pointer-events: none;
+}
+.pg-root .table-controls__ghost span {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pg-root .hex-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 180px;
+}
+.pg-root .hex-input__chip {
+  position: absolute;
+  left: 8px;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgb(0 0 0 / 0.15);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.pg-root .hex-input .input {
+  padding-left: 32px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  text-transform: uppercase;
+}
+.pg-root .hex-input[data-invalid] .input {
+  border-color: var(--tone-bad);
+  outline-color: color-mix(in srgb, var(--tone-bad) 50%, transparent);
+}
+
+/* While dragging a table handle (set on <html>, outside the scoped root). */
+html[data-table-drag] {
+  user-select: none;
+}
+html[data-table-drag='row'] * {
+  cursor: row-resize !important;
+}
+html[data-table-drag='corner'] * {
+  cursor: nwse-resize !important;
+}

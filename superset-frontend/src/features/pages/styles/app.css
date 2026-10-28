@@ -320,11 +320,7 @@
   container-type: inline-size;
   scroll-behavior: smooth;
 }
-.pg-root .pg-content .is-empty:is(p,
-.pg-root h1,
-.pg-root h2,
-.pg-root h3,
-.pg-root h4)::before {
+.pg-root .pg-content .is-empty:is(p, h1, h2, h3, h4)::before {
   content: attr(data-placeholder);
   float: left;
   height: 0;
@@ -332,20 +328,13 @@
   pointer-events: none;
   font-weight: 400;
 }
-.pg-root .pg-content .ProseMirror-selectednode:is(.pg-divider,
-.pg-root .pg-kpis,
-.pg-root .pg-chart,
-.pg-root .pg-links,
-.pg-root .pg-props,
-.pg-root .pg-banner),
-.pg-root .pg-content .ProseMirror-selectednode > :is(.pg-section,
-.pg-root .pg-callout,
-.pg-root .pg-card,
-.pg-root .pg-spacer),
-.pg-root .pg-content [data-selected='true']:is(.pg-section,
-.pg-root .pg-callout,
-.pg-root .pg-card,
-.pg-root .pg-spacer) {
+/* An empty table cell shows nothing: the page placeholder doesn't fit in a cell. */
+.pg-root .pg-content :is(td, th) .is-empty:is(p, h1, h2, h3, h4)::before {
+  content: none;
+}
+.pg-root .pg-content .ProseMirror-selectednode:is(.pg-divider, .pg-kpis, .pg-chart, .pg-links, .pg-props, .pg-banner),
+.pg-root .pg-content .ProseMirror-selectednode > :is(.pg-section, .pg-callout, .pg-card, .pg-spacer),
+.pg-root .pg-content [data-selected='true']:is(.pg-section, .pg-callout, .pg-card, .pg-spacer) {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
@@ -357,19 +346,10 @@
 .pg-root .pg-content .ProseMirror-selectednode img {
   outline: 2px solid var(--accent);
 }
-.pg-root .app[data-mode='edit'] :is(.pg-kpis,
-.pg-root .pg-chart,
-.pg-root .pg-links,
-.pg-root .pg-props,
-.pg-root .pg-divider,
-.pg-root .pg-pill) {
+.pg-root .app[data-mode='edit'] :is(.pg-kpis, .pg-chart, .pg-links, .pg-props, .pg-divider, .pg-pill) {
   cursor: pointer;
 }
-.pg-root .app[data-mode='edit'] :is(.pg-kpis,
-.pg-root .pg-chart,
-.pg-root .pg-links,
-.pg-root .pg-props,
-.pg-root .pg-divider):hover:not(.ProseMirror-selectednode) {
+.pg-root .app[data-mode='edit'] :is(.pg-kpis, .pg-chart, .pg-links, .pg-props, .pg-divider):hover:not(.ProseMirror-selectednode) {
   outline: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent);
   outline-offset: 3px;
 }

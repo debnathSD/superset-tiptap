@@ -23,6 +23,7 @@ import { t } from '@apache-superset/core/translation';
 import { isThemeDark, useTheme } from '@apache-superset/core/theme';
 import { ArrowLeft, BarChart3, Check, Copy, Download, Eye, FileText, ListTree, LoaderCircle, Lock, PanelRight, PanelsTopBottom, Pencil, Presentation, RectangleHorizontal, RectangleVertical, ScrollText, Settings2, TriangleAlert, Upload } from 'lucide-react';
 import { BlockHandle } from './editor/BlockHandle';
+import { TableControls } from './editor/TableControls';
 import { blankDoc } from './editor/content/builders';
 import { editorExtensions } from './editor/extensions';
 import { EditableContext } from './editor/lib/mode';
@@ -392,6 +393,7 @@ export function PageEditorScreen({ page, canEdit, addSuccessToast, addDangerToas
                 <div className="pg-page" data-mode={editing ? 'edit' : 'view'}>
                   <EditorContent editor={editor} />
                   {editing && <BlockHandle editor={editor} />}
+                  {editing && !exporting && <TableControls editor={editor} />}
                 </div>
               </PageSheet>
             </EditableContext.Provider>

@@ -12,7 +12,7 @@ import { TONES, type Tone } from '../lib/palette'
 import type { TextStats } from '../lib/textStats'
 import { CALLOUT_ICONS } from '../nodeviews/CalloutView'
 import { LayoutGlyph } from '../nodeviews/SectionView'
-import { Field, PaneSection, Segmented, Slider, Swatches, TextInput, Toggle } from '../ui/controls'
+import { Field, HexInput, PaneSection, Segmented, Slider, Swatches, TextInput, Toggle } from '../ui/controls'
 import { ItemsEditor } from './ItemsEditor'
 
 const LABELS: Record<string, string> = {
@@ -564,12 +564,23 @@ const CELL_ACTIONS: Array<[string, (e: Editor) => boolean]> = [
   ['Header column', e => e.chain().focus().toggleHeaderColumn().run()],
 ]
 
+/** The theme's default tint as an opacity %, matching the CSS (light 10 %, dark 20 % base). */
+const themeTint = (multiplier: number, add = 0) => {
+  const base = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tint')) || 10
+  return Math.round(base * multiplier + add)
+}
+
 function TablePane({ editor, target, set }: { editor: Editor; target: Target; set: (p: Record<string, unknown>) => void }) {
   const a = target.node.attrs
-  const cellColor = useEditorState({
+  const cell = useEditorState({
     editor,
-    selector: ({ editor: e }) => (e.getAttributes('tableCell').cellColor ?? e.getAttributes('tableHeader').cellColor ?? null) as string | null,
+    selector: ({ editor: e }) => {
+      const attrs = e.isActive('tableHeader') ? e.getAttributes('tableHeader') : e.getAttributes('tableCell')
+      return { color: (attrs.cellColor ?? null) as string | null, opacity: (attrs.cellOpacity ?? null) as number | null }
+    },
   })
+  const setCellColor = (color: string | null) => editor.chain().focus().setCellAttribute('cellColor', color).run()
+  const tableWidth = () => (editor.view.nodeDOM(target.pos) as HTMLElement | null)?.querySelector('table')?.offsetWidth ?? 600
   return (
     <>
       <PaneSection title="Table style">
@@ -578,20 +589,56 @@ function TablePane({ editor, target, set }: { editor: Editor; target: Target; se
           onChange={tableStyle => set({ tableStyle })}
           options={[{ value: 'default', label: 'Default' }, { value: 'striped', label: 'Striped' }, { value: 'minimal', label: 'Minimal' }, { value: 'bordered', label: 'Grid' }]}
         />
-        <Field label="Header color">
-          <Swatches value={a.headerColor} noneLabel="Plain header" onChange={headerColor => set({ headerColor })} />
-        </Field>
+      </PaneSection>
+      <PaneSection title="Header color">
+        <Swatches value={a.headerColor} noneLabel="Plain header" onChange={headerColor => set({ headerColor })} />
+        <HexInput value={a.headerColor} label="Header color hex code" onChange={headerColor => set({ headerColor })} />
+        {a.headerColor && (
+          <Field label="Opacity" hint="100 % is a solid header; strong fills switch to white text.">
+            <Slider label="Header color opacity" value={a.headerOpacity ?? themeTint(1.3)} min={5} max={100} step={5} unit="%" onChange={headerOpacity => set({ headerOpacity })} />
+          </Field>
+        )}
       </PaneSection>
       <PaneSection title="Selected cells">
-        <Field label="Cell color" hint="Applies to the cell under the cursor or every selected cell.">
-          <Swatches value={cellColor} onChange={color => editor.chain().focus().setCellAttribute('cellColor', color).run()} />
+        <Field label="Cell color" hint="Applies to the cell under the cursor or every selected cell, header cells included.">
+          <Swatches value={cell.color} onChange={setCellColor} />
+          <HexInput value={cell.color} label="Cell color hex code" onChange={setCellColor} />
         </Field>
+        {cell.color && (
+          <Field label="Opacity" hint="100 % fills the cell solid; strong fills switch to readable text.">
+            <Slider
+              label="Cell color opacity"
+              value={cell.opacity ?? themeTint(1.6, 6)}
+              min={5}
+              max={100}
+              step={5}
+              unit="%"
+              onChange={opacity => editor.chain().setCellAttribute('cellOpacity', opacity).run()}
+            />
+          </Field>
+        )}
         <div className="action-grid">
           {CELL_ACTIONS.map(([label, run]) => (
             <button key={label} type="button" className="btn" onMouseDown={event => event.preventDefault()} onClick={() => run(editor)}>
               {label}
             </button>
           ))}
+        </div>
+      </PaneSection>
+      <PaneSection title="Size">
+        <p className="pane__note">
+          Hover the table: click <strong>+</strong> under it or to its right to add a row or column, drag any column or row border to resize it, and drag the corner to resize the whole table.
+        </p>
+        <div className="action-grid">
+          <button type="button" className="btn" onClick={() => editor.chain().focus().resetTableSize(target.pos, 'columns').run()}>
+            Full width
+          </button>
+          <button type="button" className="btn" onClick={() => editor.chain().focus().distributeTableColumns(target.pos, tableWidth()).run()}>
+            Even columns
+          </button>
+          <button type="button" className="btn" onClick={() => editor.chain().focus().resetTableSize(target.pos, 'rows').run()}>
+            Fit row heights
+          </button>
         </div>
       </PaneSection>
       <div className="pane-actions">

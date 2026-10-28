@@ -205,7 +205,23 @@ export const INSERT_ITEMS: InsertItem[] = [
     group: 'Web parts',
     icon: Table2,
     keywords: ['grid', 'rows', 'columns'],
-    run: e => e.chain().focus().insertTable({ rows: 4, cols: 4, withHeaderRow: true }).run(),
+    // New tables start as a grid, so every row and column border is visible to resize.
+    run: e =>
+      e
+        .chain()
+        .focus()
+        .insertTable({ rows: 4, cols: 4, withHeaderRow: true })
+        .command(({ tr }) => {
+          const { $from } = tr.selection
+          for (let depth = $from.depth; depth > 0; depth--) {
+            if ($from.node(depth).type.name === 'table') {
+              tr.setNodeAttribute($from.before(depth), 'tableStyle', 'bordered')
+              break
+            }
+          }
+          return true
+        })
+        .run(),
   },
 
   // ── Data ──

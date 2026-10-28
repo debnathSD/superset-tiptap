@@ -253,7 +253,7 @@ export async function exportPptx(ctx: ExportContext) {
           if (data) slide.addImage({ data, ...box });
         } else if (item.kind === 'table') {
           const widths = Array.from(item.el.rows[0]?.cells ?? []).map(cell => cell.getBoundingClientRect().width / PX);
-          slide.addTable(tableRows(item.el), { x: box.x, y: box.y, w: box.w, colW: widths.length ? widths : undefined, border: { type: 'solid', color: 'E1DFDD', pt: 0.5 }, margin: 0.04, autoPage: false });
+          slide.addTable(tableRows(item.el), { x: box.x, y: box.y, w: box.w, colW: widths.length ? widths : undefined, rowH: Array.from(item.el.rows).map(row => row.getBoundingClientRect().height / PX), border: { type: 'solid', color: 'E1DFDD', pt: 0.5 }, margin: 0.04, autoPage: false });
         } else {
           const style = getComputedStyle(item.el);
           const runs = item.list ? listRuns(item.el) : runsFrom(item.el, style);

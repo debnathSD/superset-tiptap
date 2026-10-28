@@ -26,10 +26,7 @@
 .pg-root .pg-content :where(p) {
   margin: 0.5em 0;
 }
-.pg-root .pg-content :where(h1,
-.pg-root h2,
-.pg-root h3,
-.pg-root h4) {
+.pg-root .pg-content :where(h1, h2, h3, h4) {
   font-family: var(--font-display);
   line-height: 1.25;
   font-weight: 650;
@@ -99,8 +96,7 @@
   border-radius: 3px;
   padding: 0 0.1em;
 }
-.pg-root .pg-content :where(ul,
-.pg-root ol) {
+.pg-root .pg-content :where(ul, ol) {
   padding-left: 1.4em;
   margin: 0.5em 0;
 }
@@ -133,11 +129,7 @@
   height: auto;
   border-radius: var(--radius);
 }
-.pg-root :where(.pg-callout,
-.pg-root .pg-card,
-.pg-root .pg-banner,
-.pg-root .pg-chart,
-.pg-root .pg-links) {
+.pg-root :where(.pg-callout, .pg-card, .pg-banner, .pg-chart, .pg-links) {
   --c: var(--palette-teal);
 }
 .pg-root .pg-content .has-block-style {
@@ -159,8 +151,7 @@
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   background: color-mix(in srgb, var(--c) calc(var(--tint) * 0.55), transparent);
 }
-.pg-root .pg-content :is(h3,
-.pg-root h4).has-block-style[data-variant='solid'] {
+.pg-root .pg-content :is(h3, h4).has-block-style[data-variant='solid'] {
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -315,10 +306,7 @@
   opacity: 0;
   transition: opacity 0.12s;
 }
-.pg-root :is(h1,
-.pg-root h2,
-.pg-root h3,
-.pg-root h4):hover > .pg-heading-toggle,
+.pg-root :is(h1, h2, h3, h4):hover > .pg-heading-toggle,
 .pg-root .pg-heading-toggle[aria-expanded='false'],
 .pg-root .pg-heading-toggle:focus-visible {
   opacity: 1;
@@ -474,9 +462,7 @@
   gap: 8px;
   padding: 14px 18px 16px;
 }
-.pg-root .pg-card__body :is(h2,
-.pg-root h3,
-.pg-root h4) {
+.pg-root .pg-card__body :is(h2, h3, h4) {
   margin: 0 0 4px;
   font-size: 1.1rem;
 }
@@ -550,8 +536,7 @@
 .pg-root .pg-banner__inner > :last-child {
   margin-bottom: 0;
 }
-.pg-root .pg-banner :is(h1,
-.pg-root h2) {
+.pg-root .pg-banner :is(h1, h2) {
   margin: 0.15em 0 0.25em;
 }
 .pg-root .pg-banner p {
@@ -892,9 +877,7 @@
 .pg-root .pg-links[data-layout='buttons'] .pg-link:hover {
   background: color-mix(in srgb, var(--c) 85%, #000);
 }
-.pg-root .pg-links[data-layout='buttons'] :is(.pg-link__icon,
-.pg-root .pg-link__desc,
-.pg-root .pg-link__arrow) {
+.pg-root .pg-links[data-layout='buttons'] :is(.pg-link__icon, .pg-link__desc, .pg-link__arrow) {
   display: none;
 }
 .pg-root .pg-links[data-layout='buttons'] .pg-link__label {
@@ -906,8 +889,7 @@
   padding: 4px 0;
   gap: 8px;
 }
-.pg-root .pg-links[data-layout='compact'] :is(.pg-link__desc,
-.pg-root .pg-link__arrow) {
+.pg-root .pg-links[data-layout='compact'] :is(.pg-link__desc, .pg-link__arrow) {
   display: none;
 }
 .pg-root .pg-links[data-layout='compact'] .pg-link__icon {
@@ -955,19 +937,16 @@
   margin: 12px 0;
   overflow-x: auto;
 }
-.pg-root .pg-content table {
+/* Editor tables only: Superset's own table charts keep their styles. */
+.pg-root .pg-content .tableWrapper table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  margin: 12px 0;
+  margin: 0;
   font-size: 13.5px;
   font-variant-numeric: tabular-nums;
 }
-.pg-root .pg-content .tableWrapper table {
-  margin: 0;
-}
-.pg-root .pg-content :is(th,
-.pg-root td) {
+.pg-root .pg-content .tableWrapper :is(th, td) {
   position: relative;
   padding: 7px 10px;
   border-bottom: 1px solid var(--border);
@@ -976,40 +955,52 @@
   box-sizing: border-box;
   min-width: 1em;
 }
-.pg-root .pg-content :is(th,
-.pg-root td) p {
+.pg-root .pg-content .tableWrapper :is(th, td) p {
   margin: 0;
 }
-.pg-root .pg-content th {
+.pg-root .pg-content .tableWrapper th {
   font-size: 12px;
   font-weight: 700;
   background: var(--surface-2);
   border-bottom: 2px solid var(--border-strong);
 }
-.pg-root .pg-content :is(.tableWrapper[data-header],
-.pg-root table[data-header]) th {
+.pg-root .pg-content .tableWrapper[data-header] th:not([data-color]) {
   background: color-mix(in srgb, var(--c-header) calc(var(--tint) * 1.3), var(--page-bg));
   color: color-mix(in srgb, var(--c-header) 55%, var(--text));
   border-bottom-color: var(--c-header);
 }
-.pg-root .pg-content :is(.tableWrapper[data-table-style='striped'],
-.pg-root table[data-table-style='striped']) tr:nth-child(even) td:not([data-color]) {
+.pg-root .pg-content .tableWrapper[data-table-style='striped'] tr:nth-child(even) td:not([data-color]) {
   background: var(--surface-2);
 }
-.pg-root .pg-content :is(.tableWrapper[data-table-style='bordered'],
-.pg-root table[data-table-style='bordered']) :is(th,
-.pg-root td) {
+.pg-root .pg-content .tableWrapper[data-table-style='bordered'] :is(th, td) {
   border: 1px solid var(--border);
 }
-.pg-root .pg-content :is(.tableWrapper[data-table-style='minimal'],
-.pg-root table[data-table-style='minimal']) th {
+.pg-root .pg-content .tableWrapper[data-table-style='minimal'] th:not([data-color]) {
   background: transparent;
 }
-.pg-root .pg-content :is(.tableWrapper[data-table-style='minimal'],
-.pg-root table[data-table-style='minimal']) td {
+.pg-root .pg-content .tableWrapper[data-table-style='minimal'] td {
   border-bottom-color: transparent;
 }
-.pg-root .pg-content :is(th,
-.pg-root td)[data-color] {
-  background: color-mix(in srgb, var(--c) calc(var(--tint) * 1.2), var(--page-bg));
+/* Cell colors win over the header color and the table style. */
+.pg-root .pg-content .tableWrapper :is(th, td)[data-color] {
+  background: color-mix(in srgb, var(--c) calc(var(--tint) * 1.6 + 6%), var(--page-bg));
+}
+.pg-root .pg-content .tableWrapper th[data-color] {
+  color: color-mix(in srgb, var(--c) 60%, var(--text));
+  border-bottom-color: var(--c);
+}
+.pg-root .pg-content .tableWrapper[data-header][data-header-opacity] th:not([data-color]) {
+  background: color-mix(in srgb, var(--c-header) var(--header-opacity), var(--page-bg));
+}
+.pg-root .pg-content .tableWrapper[data-header][data-header-strong] th:not([data-color]) {
+  color: var(--c-header-on);
+}
+.pg-root .pg-content .tableWrapper :is(th, td)[data-color][data-cell-opacity] {
+  background: color-mix(in srgb, var(--c) var(--cell-opacity), var(--page-bg));
+}
+.pg-root .pg-content .tableWrapper :is(th, td)[data-color][data-cell-strong] {
+  color: var(--c-on);
+}
+.pg-root .pg-content .tableWrapper :is(th, td)[data-cell-strong] a {
+  color: inherit;
 }

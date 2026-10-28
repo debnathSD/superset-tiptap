@@ -1,6 +1,6 @@
 import { Check, ChevronDown } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { colorHex, isHexColor, PALETTE } from '../lib/palette'
+import { colorHex, isHexColor, PALETTE, parseHex } from '../lib/palette'
 
 /** Small, dependency-free form controls shared by the toolbar and the property pane. */
 
@@ -122,6 +122,40 @@ export function Swatches({
           aria-label="Custom color"
         />
       </label>
+    </div>
+  )
+}
+
+/** Type a hex code for a color: #RGB or #RRGGBB, with or without "#"; applies on Enter or when leaving the field. */
+export function HexInput({ value, onChange, label = 'Hex color' }: { value: string | null | undefined; onChange: (hex: string) => void; label?: string }) {
+  const current = colorHex(value as never) ?? ''
+  const [draft, setDraft] = useState(current)
+  useEffect(() => setDraft(current), [current])
+  const parsed = parseHex(draft)
+  const commit = () => {
+    if (parsed && parsed !== current.toLowerCase()) onChange(parsed)
+    else if (!parsed) setDraft(current)
+  }
+  return (
+    <div className="hex-input" data-invalid={(draft !== '' && !parsed) || undefined}>
+      <span className="hex-input__chip" style={{ background: parsed ?? (current || 'transparent') }} aria-hidden="true" />
+      <input
+        className="input"
+        value={draft}
+        placeholder="#RRGGBB"
+        spellCheck={false}
+        autoComplete="off"
+        maxLength={7}
+        aria-label={label}
+        onChange={event => setDraft(event.target.value.trim())}
+        onKeyDown={event => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            commit()
+          } else if (event.key === 'Escape') setDraft(current)
+        }}
+        onBlur={commit}
+      />
     </div>
   )
 }
