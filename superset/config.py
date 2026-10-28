@@ -2568,6 +2568,13 @@ PRESENTON_API_URL = "https://api.presenton.ai/api/v3"
 PRESENTON_TEMPLATE: str | None = None
 PRESENTON_TIMEOUT = 60  # seconds per Presenton API request
 PRESENTON_EMBED_HOURS = 2  # lifetime of an embed link (Presenton allows up to 72)
+# Presenton spends credits on the key owner's account: when True, only admins can
+# design, edit or export Presenton decks; everyone else can view and download them.
+PRESENTON_ADMIN_ONLY = False
+
+# Where "/" sends visitors who are not logged in, e.g. "/presentation/list/" on a
+# site whose Public role can browse. None sends them to the login form, as usual.
+PUBLIC_HOME_PATH: str | None = None
 
 if CONFIG_PATH_ENV_VAR in os.environ:
     # Explicitly import config module that is not necessarily in pythonpath; useful

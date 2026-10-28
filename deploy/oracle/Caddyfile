@@ -1,0 +1,10 @@
+# HTTPS for the public site. SITE_ADDRESS is a hostname that points at this VM,
+# e.g. 203-0-113-10.sslip.io; Caddy gets and renews its certificate by itself.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	reverse_proxy superset:8088 {
+		transport http {
+			read_timeout 180s
+		}
+	}
+}

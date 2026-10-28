@@ -59,10 +59,19 @@ def _base() -> str:
     return str(current_app.config.get("PRESENTON_API_URL") or "https://api.presenton.ai/api/v3").rstrip("/")
 
 
+def may_spend_credits() -> bool:
+    """Whether the current user may run Presenton actions that cost credits."""
+    from superset import security_manager  # pylint: disable=import-outside-toplevel
+
+    return not current_app.config.get("PRESENTON_ADMIN_ONLY") or security_manager.is_admin()
+
+
 def presenton_status() -> dict[str, Any]:
-    """Whether Presenton can be used, without revealing the key."""
+    """Whether Presenton can be used by the current user, without revealing the key."""
     if not _key():
         return {"available": False, "reason": "missing_key"}
+    if not may_spend_credits():
+        return {"available": False, "reason": "admin_only"}
     return {"available": True, "reason": None}
 
 
@@ -190,12 +199,13 @@ def task_status(task_id: str) -> dict[str, Any]:
 
 
 def embed_url(presentation_id: str, can_edit: bool) -> dict[str, Any]:
-    """A scoped, short-lived URL that shows (and for owners, edits) the deck in an iframe."""
+    """A scoped, short-lived URL that shows (and for editors, edits) the deck in an iframe."""
     if not PRESENTATION_ID.match(presentation_id):
         raise GenerationError("Not a Presenton presentation.", 404)
-    scopes = ["presentation:read", "presentation:export"]
+    # Exports and AI edits cost credits, so viewers only read; they download the stored file instead.
+    scopes = ["presentation:read"]
     if can_edit:
-        scopes.append("presentation:edit")
+        scopes += ["presentation:edit", "presentation:export"]
     hours = current_app.config.get("PRESENTON_EMBED_HOURS", 2)
     expires = datetime.now(timezone.utc) + timedelta(hours=hours)
     token = _call(

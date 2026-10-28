@@ -275,7 +275,11 @@ export function CreatePresentationModal({ show, onHide, onCreated, addDangerToas
     {
       value: 'presenton',
       name: t('Presenton'),
-      detail: presentonReady ? t('Designs a polished PowerPoint deck from your data. View, edit and download it here.') : t('Not set up: add PRESENTON_API_KEY to the server configuration.'),
+      detail: presentonReady
+        ? t('Designs a polished PowerPoint deck from your data. View, edit and download it here.')
+        : ai?.presenton?.reason === 'admin_only'
+          ? t('Only admins can design decks with Presenton on this site.')
+          : t('Not set up: add PRESENTON_API_KEY to the server configuration.'),
       disabled: !presentonReady,
     },
     {

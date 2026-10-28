@@ -46,3 +46,7 @@ superset/static/assets/
 superset-websocket/dist/
 venv
 .venv
+
+# Deployment secrets and server content
+deploy/oracle/.env
+deploy/oracle/content/

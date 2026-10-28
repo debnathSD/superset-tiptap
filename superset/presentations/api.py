@@ -33,6 +33,7 @@ from superset.models.slice import Slice
 from superset.presentations.ai import ai_status, generate_deck, GenerationError
 from superset.presentations.presenton import (
     embed_url,
+    may_spend_credits,
     presenton_status,
     start_generation,
     task_status,
@@ -264,6 +265,8 @@ class PresentationRestApi(BaseSupersetModelRestApi):
             403:
               $ref: '#/components/responses/403'
         """
+        if not may_spend_credits():
+            return self.response_403()
         payload, error_response = self._load_generate_payload()
         if error_response:
             return error_response
@@ -294,6 +297,8 @@ class PresentationRestApi(BaseSupersetModelRestApi):
             404:
               $ref: '#/components/responses/404'
         """
+        if not may_spend_credits():
+            return self.response_403()
         try:
             return self.response(200, result=task_status(task_id))
         except GenerationError as error:
@@ -331,7 +336,7 @@ class PresentationRestApi(BaseSupersetModelRestApi):
             return self.response_404()
         try:
             security_manager.raise_for_ownership(item)
-            can_edit = True
+            can_edit = may_spend_credits()
         except SupersetSecurityException:
             can_edit = False
         try:

@@ -38,6 +38,8 @@ server and are never sent to the browser.
 Other settings, with their defaults in `superset/config.py`:
 
 - `PRESENTON_TEMPLATE`: a Presenton standard template such as `neo-modern`.
+- `PRESENTON_ADMIN_ONLY`: only admins may design, edit or export Presenton decks, which spend credits. Everyone else views them and downloads the `.pptx`.
+- `PUBLIC_HOME_PATH`: where `/` sends visitors who aren't logged in, e.g. `/presentation/list/` on a public site.
 - `PRESENTON_EMBED_HOURS`: how long an embed link lives (default 2; Presenton allows up to 72).
 - `PRESENTATIONS_AI_MODEL`: the Claude model.
 - `PRESENTATIONS_AI_EFFORT`: Claude's effort level.
@@ -73,3 +75,5 @@ override `TALISMAN_CONFIG`, keep that entry.
 
 `superset init` grants the `Presentation` permissions (`can_read`, `can_write`) and the
 **Presentations** menu to the built-in roles.
+
+To host the site publicly for free, see [deploy/oracle/README.md](deploy/oracle/README.md).

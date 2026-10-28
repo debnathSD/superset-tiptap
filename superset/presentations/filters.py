@@ -53,6 +53,8 @@ class PresentationAccessFilter(BaseFilter):  # pylint: disable=too-few-public-me
         if security_manager.is_admin():
             return query
         user_id = getattr(g.user, "id", None)
+        if user_id is None:  # anonymous visitors (public role): published only
+            return query.filter(Presentation.published.is_(True))
         owned = Presentation.owners.any(security_manager.user_model.id == user_id)
         return query.filter(
             or_(

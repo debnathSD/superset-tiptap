@@ -49,6 +49,8 @@ class PageAccessFilter(BaseFilter):  # pylint: disable=too-few-public-methods
         if security_manager.is_admin():
             return query
         user_id = getattr(g.user, "id", None)
+        if user_id is None:  # anonymous visitors (public role): published pages and templates
+            return query.filter(or_(Page.published.is_(True), Page.is_template.is_(True)))
         owned = Page.owners.any(security_manager.user_model.id == user_id)
         return query.filter(
             or_(

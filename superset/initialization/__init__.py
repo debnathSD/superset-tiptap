@@ -63,7 +63,7 @@ from superset.extensions.context import extension_context
 from superset.security import SupersetSecurityManager
 from superset.sql.parse import SQLGLOT_DIALECTS
 from superset.superset_typing import FlaskResponse
-from superset.utils.core import is_test, pessimistic_connection_handling
+from superset.utils.core import get_user_id, is_test, pessimistic_connection_handling
 from superset.utils.decorators import transaction
 from superset.utils.log import DBEventLogger, get_event_logger_from_cfg_value
 
@@ -1000,6 +1000,9 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
 class SupersetIndexView(IndexView):
     @expose("/")
     def index(self) -> FlaskResponse:
+        # A public site sends anonymous visitors somewhere they can browse, not to the login form.
+        if not get_user_id() and (public_home := current_app.config.get("PUBLIC_HOME_PATH")):
+            return redirect(public_home)
         return redirect(url_for("Superset.welcome"))
 
     @expose("/lang/<string:locale>")

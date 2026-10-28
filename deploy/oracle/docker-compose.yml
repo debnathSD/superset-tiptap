@@ -1,0 +1,95 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Public Superset (Pages + Presentations) on one small VM: Postgres, Redis,
+# Superset and Caddy, which serves HTTPS with a free Let's Encrypt certificate.
+# Secrets live in .env next to this file (created by deploy.sh, never committed).
+name: superset-tiptap
+
+x-superset: &superset
+  image: superset-tiptap:app
+  env_file: .env
+  environment:
+    SUPERSET_CONFIG_PATH: /app/deploy/superset_config.py
+  volumes:
+    - ./superset_config.py:/app/deploy/superset_config.py:ro
+    - ./scripts:/app/deploy/scripts:ro
+    - ./content:/app/deploy/content:ro
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: superset
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db-init.sql:/docker-entrypoint-initdb.d/db-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d superset"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    restart: unless-stopped
+
+  superset:
+    <<: *superset
+    environment:
+      SUPERSET_CONFIG_PATH: /app/deploy/superset_config.py
+      SERVER_WORKER_AMOUNT: "3"
+      SERVER_THREADS_AMOUNT: "16"
+      GUNICORN_TIMEOUT: "180"
+    restart: unless-stopped
+
+  # One-off setup: migrations, roles, the admin account and demo content.
+  # Run with: docker compose run --rm init
+  init:
+    <<: *superset
+    command: ["python", "/app/deploy/scripts/init.py"]
+    profiles: ["init"]
+    restart: "no"
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - superset
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
