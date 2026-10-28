@@ -1,4 +1,4 @@
-import { computePosition, flip, offset, shift } from '@floating-ui/dom'
+import { autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom'
 import { Extension } from '@tiptap/core'
 import { PluginKey } from '@tiptap/pm/state'
 import { ReactRenderer } from '@tiptap/react'
@@ -32,12 +32,14 @@ export const SlashCommand = Extension.create({
         render: () => {
           type MenuProps = { items: InsertItem[]; command: (item: InsertItem) => void }
           let renderer: ReactRenderer<SlashMenuHandle, MenuProps> | null = null
+          let current: SuggestionProps<InsertItem, InsertItem> | null = null
+          let stopFollowing: (() => void) | null = null
 
-          const place = (props: SuggestionProps<InsertItem, InsertItem>) => {
-            const rect = props.clientRect?.()
+          const place = () => {
+            const rect = current?.clientRect?.()
             const element = renderer?.element as HTMLElement | undefined
             if (!rect || !element) return
-            const virtual = { getBoundingClientRect: () => rect }
+            const virtual = { getBoundingClientRect: () => current?.clientRect?.() ?? rect }
             computePosition(virtual, element, {
               placement: 'bottom-start',
               strategy: 'fixed',
@@ -54,15 +56,24 @@ export const SlashCommand = Extension.create({
               const element = created.element as HTMLElement
               element.style.position = 'fixed'
               element.style.zIndex = '60'
-              document.body.appendChild(element)
-              place(props)
+              // Mount inside the editor's scoped root when there is one (Superset scopes every style and theme
+              // token under .pg-root); otherwise on the body.
+              const host = (props.editor.view.dom.closest('.pg-root') as HTMLElement | null) ?? document.body
+              host.appendChild(element)
+              current = props
+              // Follow the "/" while the menu is open: scrolling, page breaks re-measuring or the menu growing all move it.
+              const anchor = { getBoundingClientRect: () => current?.clientRect?.() ?? new DOMRect(), contextElement: props.editor.view.dom }
+              stopFollowing = autoUpdate(anchor, element, place, { animationFrame: true })
             },
             onUpdate: props => {
+              current = props
               renderer?.updateProps(props)
-              place(props)
+              place()
             },
             onKeyDown: ({ event }) => {
               if (event.key === 'Escape') {
+                stopFollowing?.()
+                stopFollowing = null
                 renderer?.destroy()
                 renderer?.element.remove()
                 renderer = null
@@ -71,6 +82,9 @@ export const SlashCommand = Extension.create({
               return renderer?.ref?.onKeyDown(event) ?? false
             },
             onExit: () => {
+              stopFollowing?.()
+              stopFollowing = null
+              current = null
               renderer?.element.remove()
               renderer?.destroy()
               renderer = null
